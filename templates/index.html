@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VERIX — Cybersecurity Account Protection & Threat Detection System</title>
+    <!-- Google Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+    <!-- FontAwesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div id="app-container">
+    <!-- ------------------------------------------------------------- -->
+    <!-- 1. MAIN SIDEBAR NAVIGATION                                   -->
+    <!-- ------------------------------------------------------------- -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <i class="fa-solid fa-shield-halved"></i>
+            <div>
+                <h2>VERIX</h2>
+                <span class="mono" style="font-size: 0.65rem; color: var(--accent-cyan); display: block; margin-top: -3px;">THREAT ENGINE v2.4</span>
+            </div>
+        </div>
+
+        <div class="sidebar-section-title">Main Menu</div>
+        <ul class="sidebar-menu">
+            <li>
+                <a class="menu-item active" data-view="dashboard-view">
+                    <div class="menu-item-left">
+                        <i class="fa-solid fa-house"></i>
+                        <span>Dashboard</span>
+                    </div>
+                </a>
+            </li>
+            <li>
+                <a class="menu-item" data-view="accounts-view">
+                    <div class="menu-item-left">
+                        <i class="fa-solid fa-link"></i>
+                        <span>Linked Accounts</span>
+                    </div>
+                </a>
+            </li>
+            <li>
+                <a class="menu-item" data-view="devices-view">
+                    <div class="menu-item-left">
+                        <i class="fa-solid fa-mobile-screen"></i>
+                        <span>Devices</span>
+                    </div>
+                </a>
+            </li>
+            <li>
+                <a class="menu-item" data-view="requests-view">
+                    <div class="menu-item-left">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span>Login Requests</span>
+                    </div>
+                    <span class="badge-count warning" id="sidebar-pending-count">1</span>
+                </a>
+            </li>
+            <li>
+                <a class="menu-item" data-view="simulator-view">
+                    <div class="menu-item-left">
+                        <i class="fa-solid fa-bolt" style="color: var(--accent-cyan);"></i>
+                        <span>Attack Simulator</span>
+                    </div>
+                    <span class="badge-count" style="background: var(--accent-blue);">DEMO</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="sidebar-section-title">Intelligence & Logs</div>
+        <ul class="sidebar-menu">
+            <li>
+                <a class="menu-item" data-view="analytics-view">
+                    <div class="menu-item-left">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <span>Threat Analytics</span>
+                    </div>
+                </a>
+            </li>
+            <li>
+                <a class="menu-item" data-view="history-view">
+                    <div class="menu-item-left">
+                        <i class="fa-solid fa-list-check"></i>
+                        <span>Login History</span>
+                    </div>
+                </a>
+            </li>
+            <li>
+                <a class="menu-item" data-view="alerts-view">
+                    <div class="menu-item-left">
+                        <i class="fa-solid fa-bell"></i>
+                        <span>Security Alerts</span>
+                    </div>
+                    <span class="badge-count" id="sidebar-alerts-count">2</span>
+                </a>
+            </li>
+            <li>
+                <a class="menu-item" data-view="sessions-view">
+                    <div class="menu-item-left">
+                        <i class="fa-solid fa-laptop-code"></i>
+                        <span>Active Sessions</span>
+                    </div>
+                </a>
+            </li>
+            <li>
+                <a class="menu-item" data-view="rules-view">
+                    <div class="menu-item-left">
+                        <i class="fa-solid fa-sliders"></i>
+                        <span>Security Rules</span>
+                    </div>
+                </a>
+            </li>
+        </ul>
+
+        <!-- User Profile Mini Footer -->
+        <div class="sidebar-user">
+            <div class="user-avatar">AP</div>
+            <div class="user-info">
+                <h4>Abhinav Pathi</h4>
+                <p><span class="pulse-dot"></span> Protected</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ------------------------------------------------------------- -->
+    <!-- 2. MAIN CONTENT WRAPPER                                       -->
+    <!-- ------------------------------------------------------------- -->
+    <div class="main-wrapper">
+        <!-- Top Navbar -->
+        <header class="top-header">
+            <div class="header-title">
+                <h1 id="view-title">🏠 Security Control Center</h1>
+                <p id="view-subtitle">Real-time Account Protection & Threat Detection Monitoring</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-cyber-outline" onclick="switchView('simulator-view')">
+                    <i class="fa-solid fa-flask"></i> Launch Attack Simulator
+                </button>
+                <div class="risk-badge-pill low" id="header-status-badge">
+                    <span class="pulse-dot"></span> Protection: Active
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Body Content -->
+        <main class="content-body">
+
+            <!-- ======================================================= -->
+            <!-- VIEW 1: DASHBOARD                                       -->
+            <!-- ======================================================= -->
+            <section id="dashboard-view" class="view-section active">
+                <!-- Overall Risk Status Banner -->
+                <div class="risk-status-banner">
+                    <div class="risk-banner-left">
+                        <div class="risk-gauge-circle" id="dash-risk-circle">
+                            <div class="risk-gauge-inner">
+                                <span class="risk-gauge-score" id="dash-risk-score">18</span>
+                                <span class="risk-gauge-label">/100</span>
+                            </div>
+                        </div>
+                        <div class="risk-banner-details">
+                            <h3>
+                                Account Security Status 
+                                <span class="risk-badge-pill low" id="dash-risk-badge">🟢 LOW RISK</span>
+                            </h3>
+                            <p id="dash-risk-description">No critical threats detected. All linked accounts and trusted devices are operating normally.</p>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="btn-cyber" onclick="fetchDashboardData()">
+                            <i class="fa-solid fa-arrows-rotate"></i> Refresh Status
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 4 Summary Cards -->
+                <div class="dashboard-grid">
+                    <div class="stat-card blue">
+                        <div class="stat-card-info">
+                            <h3>Linked Accounts</h3>
+                            <div class="stat-value" id="card-linked-count">4</div>
+                        </div>
+                        <div class="stat-card-icon"><i class="fa-solid fa-link"></i></div>
+                    </div>
+                    <div class="stat-card green">
+                        <div class="stat-card-info">
+                            <h3>Trusted Devices</h3>
+                            <div class="stat-value" id="card-trusted-count">3</div>
+                        </div>
+                        <div class="stat-card-icon"><i class="fa-solid fa-mobile-screen-button"></i></div>
+                    </div>
+                    <div class="stat-card amber">
+                        <div class="stat-card-info">
+                            <h3>Pending Requests</h3>
+                            <div class="stat-value" id="card-pending-count">1</div>
+                        </div>
+                        <div class="stat-card-icon"><i class="fa-solid fa-user-shield"></i></div>
+                    </div>
+                    <div class="stat-card red">
+                        <div class="stat-card-info">
+                            <h3>Threat Alerts</h3>
+                            <div class="stat-value" id="card-alerts-count">2</div>
+                        </div>
+                        <div class="stat-card-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    </div>
+                </div>
+
+                <!-- Pending Login Request Hero Card -->
+                <div class="panel-card" style="margin-bottom: 2rem;">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="fa-solid fa-shield-cat"></i> Pending Login Authorization Requests
+                        </div>
+                        <span class="risk-badge-pill med">Manual Approval Required</span>
+                    </div>
+                    
+                    <div id="dash-pending-container">
+                        <!-- Dynamic Pending Request Card injected here -->
+                    </div>
+                </div>
+
+                <!-- Grid 2-Column: Linked Accounts Overview + Security Alerts -->
+                <div class="grid-2col">
+                    <div class="panel-card">
+                        <div class="panel-header">
+                            <div class="panel-title">
+                                <i class="fa-solid fa-link"></i> Linked Platform Accounts
+                            </div>
+                            <button class="btn-cyber-outline" style="padding: 0.35rem 0.75rem; font-size: 0.75rem;" onclick="switchView('accounts-view')">View All</button>
+                        </div>
+                        <div class="accounts-grid" id="dash-accounts-preview">
+                            <!-- Injected by JS -->
+                        </div>
+                    </div>
+
+                    <div class="panel-card">
+                        <div class="panel-header">
+                            <div class="panel-title">
+                                <i class="fa-solid fa-bell"></i> Recent Security Intelligence Alerts
+                            </div>
+                            <button class="btn-cyber-outline" style="padding: 0.35rem 0.75rem; font-size: 0.75rem;" onclick="switchView('alerts-view')">View All</button>
+                        </div>
+                        <div class="device-list" id="dash-alerts-preview">
+                            <!-- Injected by JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ======================================================= -->
+            <!-- VIEW 2: LINKED ACCOUNTS                                 -->
+            <!-- ======================================================= -->
+            <section id="accounts-view" class="view-section">
+                <div class="panel-card" style="margin-bottom: 1.5rem;">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="fa-solid fa-link"></i> Connected Third-Party Accounts
+                        </div>
+                        <button class="btn-cyber" onclick="openAddAccountModal()">
+                            <i class="fa-solid fa-plus"></i> Add Account
+                        </button>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">
+                        The system monitors authentication signals and session tokens for all linked accounts. In production, official platform OAuth APIs are used.
+                    </p>
+                    <div class="accounts-grid" id="all-accounts-grid">
+                        <!-- Injected dynamically -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ======================================================= -->
+            <!-- VIEW 3: DEVICE MANAGEMENT                               -->
+            <!-- ======================================================= -->
+            <section id="devices-view" class="view-section">
+                <div class="panel-card" style="margin-bottom: 1.5rem;">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="fa-solid fa-mobile-screen"></i> Device Security Management
+                        </div>
+                    </div>
+
+                    <h3 style="font-size: 1rem; color: var(--risk-low); margin: 1rem 0 0.75rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fa-solid fa-check-circle"></i> Trusted Devices
+                    </h3>
+                    <div class="device-list" id="trusted-devices-list"></div>
+
+                    <h3 style="font-size: 1rem; color: var(--risk-med); margin: 2rem 0 0.75rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fa-solid fa-clock"></i> New / Unverified Devices
+                    </h3>
+                    <div class="device-list" id="new-devices-list"></div>
+
+                    <h3 style="font-size: 1rem; color: var(--risk-high); margin: 2rem 0 0.75rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fa-solid fa-ban"></i> Blocked Devices
+                    </h3>
+                    <div class="device-list" id="blocked-devices-list"></div>
+                </div>
+            </section>
+
+            <!-- ======================================================= -->
+            <!-- VIEW 4: PENDING LOGIN REQUESTS                          -->
+            <!-- ======================================================= -->
+            <section id="requests-view" class="view-section">
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="fa-solid fa-user-shield"></i> Pending Login Authorization Queue
+                        </div>
+                    </div>
+                    <div id="full-requests-container"></div>
+                </div>
+            </section>
+
+            <!-- ======================================================= -->
+            <!-- VIEW 5: INTERACTIVE ATTACK SIMULATOR (SEMINAR STUDIO)   -->
+            <!-- ======================================================= -->
+            <section id="simulator-view" class="view-section">
+                <div class="simulator-box">
+                    <h2 style="font-family: 'Outfit'; font-size: 1.3rem; font-weight: 700; color: var(--accent-cyan); display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem;">
+                        <i class="fa-solid fa-flask"></i> Interactive Attack Scenario Studio
+                    </h2>
+                    <p style="font-size: 0.88rem; color: var(--text-muted);">
+                        Select a pre-configured attack vector or simulate custom login signals to demonstrate live Threat Detection & Risk Score calculation.
+                    </p>
+
+                    <div class="scenario-buttons">
+                        <div class="scenario-card" onclick="runSimulation('NORMAL')">
+                            <h4>🟢 Normal User Login</h4>
+                            <p>Recognized Phone, Balasore IP, 0 Failed Attempts. Expected: LOW RISK (Score ~10) -> Auto Allowed.</p>
+                        </div>
+                        <div class="scenario-card" onclick="runSimulation('NEW_LAPTOP')">
+                            <h4>🟡 New Laptop Access</h4>
+                            <p>New MacBook Pro, Bhubaneswar IP, 1 Failed Attempt. Expected: MEDIUM RISK (Score ~65) -> Approval Required.</p>
+                        </div>
+                        <div class="scenario-card" onclick="runSimulation('HACKER_ATTACK')">
+                            <h4>🔴 High-Risk Cyber Attack</h4>
+                            <p>Kali Linux Terminal, Moscow/TOR Proxy, Brute-Force 5 Failures. Expected: HIGH RISK (Score 90+) -> Blocked + MFA.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Simulation Results Output Panel -->
+                <div class="panel-card" id="sim-result-card" style="display: none;">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="fa-solid fa-microchip"></i> Risk Engine Evaluation Output
+                        </div>
+                        <span class="risk-badge-pill" id="sim-result-badge">LOW RISK</span>
+                    </div>
+
+                    <div class="grid-2col">
+                        <div>
+                            <h4 style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem;">Calculated Risk Score</h4>
+                            <div style="font-family: 'Outfit'; font-size: 2.5rem; font-weight: 800;" id="sim-score-text">18/100</div>
+                            <div style="margin-top: 1rem;">
+                                <h4 style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">Recommended System Action</h4>
+                                <p style="font-weight: 600; font-size: 1rem;" id="sim-action-text">ALLOW</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem;">Detected Risk Signal Factors</h4>
+                            <div id="sim-factors-list"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ======================================================= -->
+            <!-- VIEW 6: THREAT ANALYTICS                                -->
+            <!-- ======================================================= -->
+            <section id="analytics-view" class="view-section">
+                <div class="grid-2col">
+                    <div class="panel-card">
+                        <div class="panel-header">
+                            <div class="panel-title"><i class="fa-solid fa-chart-line"></i> Login Attempt Activity</div>
+                        </div>
+                        <canvas id="chart-login-activity" height="220"></canvas>
+                    </div>
+
+                    <div class="panel-card">
+                        <div class="panel-header">
+                            <div class="panel-title"><i class="fa-solid fa-chart-area"></i> Risk Level Trend</div>
+                        </div>
+                        <canvas id="chart-risk-trend" height="220"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ======================================================= -->
+            <!-- VIEW 7: LOGIN HISTORY / AUDIT LOGS                      -->
+            <!-- ======================================================= -->
+            <section id="history-view" class="view-section">
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <div class="panel-title"><i class="fa-solid fa-list-check"></i> Complete Security Audit Trail</div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <select id="filter-status" class="form-control" style="width: auto; padding: 0.35rem 0.75rem;" onchange="fetchHistoryLogs()">
+                                <option value="ALL">All Statuses</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Blocked">Blocked</option>
+                            </select>
+                        </div>
+                    </div>
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Event ID</th>
+                                <th>Timestamp</th>
+                                <th>Device</th>
+                                <th>Location</th>
+                                <th>IP Address</th>
+                                <th>Risk Level</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ======================================================= -->
+            <!-- VIEW 8: ALERTS                                          -->
+            <!-- ======================================================= -->
+            <section id="alerts-view" class="view-section">
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <div class="panel-title"><i class="fa-solid fa-bell"></i> Security Notification Center</div>
+                    </div>
+                    <div class="device-list" id="full-alerts-list"></div>
+                </div>
+            </section>
+
+            <!-- ======================================================= -->
+            <!-- VIEW 9: ACTIVE SESSIONS                                 -->
+            <!-- ======================================================= -->
+            <section id="sessions-view" class="view-section">
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <div class="panel-title"><i class="fa-solid fa-laptop-code"></i> Active User Sessions</div>
+                        <button class="btn-cyber btn-danger" onclick="signoutAllOthers()">
+                            <i class="fa-solid fa-right-from-bracket"></i> Sign Out All Other Devices
+                        </button>
+                    </div>
+                    <div class="device-list" id="active-sessions-list"></div>
+                </div>
+            </section>
+
+            <!-- ======================================================= -->
+            <!-- VIEW 10: SECURITY RULES                                 -->
+            <!-- ======================================================= -->
+            <section id="rules-view" class="view-section">
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <div class="panel-title"><i class="fa-solid fa-sliders"></i> Security Policy Engine Rules</div>
+                    </div>
+                    <div class="device-list" id="security-rules-list"></div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+</div>
+
+<!-- ------------------------------------------------------------- -->
+<!-- MODALS                                                        -->
+<!-- ------------------------------------------------------------- -->
+
+<!-- MFA Verification Modal -->
+<div class="modal-overlay" id="mfa-modal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3>🔐 Layered Multi-Factor Authentication</h3>
+            <button class="close-modal-btn" onclick="closeModal('mfa-modal')">&times;</button>
+        </div>
+
+        <div class="mfa-steps">
+            <div class="mfa-step-item completed">
+                <div class="step-circle"><i class="fa-solid fa-check"></i></div>
+                <span class="step-label">1. Password</span>
+            </div>
+            <div class="mfa-step-item active" id="mfa-step-2-indicator">
+                <div class="step-circle">2</div>
+                <span class="step-label">2. OTP Code</span>
+            </div>
+            <div class="mfa-step-item" id="mfa-step-3-indicator">
+                <div class="step-circle">3</div>
+                <span class="step-label">3. Approval</span>
+            </div>
+        </div>
+
+        <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1.25rem;" id="mfa-modal-text">
+            High risk score detected! Enter the 6-digit verification code sent to your registered authenticator device (Demo code: <strong style="color: var(--accent-cyan);">123456</strong>).
+        </p>
+
+        <div class="form-group">
+            <label>Authentication OTP Code</label>
+            <input type="text" id="mfa-otp-input" class="form-control mono" placeholder="123456" maxlength="6" style="letter-spacing: 4px; font-size: 1.2rem; text-align: center;">
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.8rem; margin-top: 1.5rem;">
+            <button class="btn-cyber-outline" onclick="closeModal('mfa-modal')">Cancel</button>
+            <button class="btn-cyber" onclick="submitMFA()">Verify & Proceed</button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Account Modal -->
+<div class="modal-overlay" id="add-account-modal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3>🔗 Link New Third-Party Account</h3>
+            <button class="close-modal-btn" onclick="closeModal('add-account-modal')">&times;</button>
+        </div>
+        <div class="form-group">
+            <label>Select Service / Platform</label>
+            <select id="new-account-service" class="form-control">
+                <option value="Facebook">Facebook</option>
+                <option value="Instagram">Instagram</option>
+                <option value="WhatsApp">WhatsApp</option>
+                <option value="Email">Email / Google</option>
+                <option value="Twitter / X">Twitter / X</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Account Handle / Email</label>
+            <input type="text" id="new-account-handle" class="form-control" placeholder="user@example.com">
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 0.8rem; margin-top: 1.5rem;">
+            <button class="btn-cyber-outline" onclick="closeModal('add-account-modal')">Cancel</button>
+            <button class="btn-cyber" onclick="submitAddAccount()">Link Account</button>
+        </div>
+    </div>
+</div>
+
+<!-- Event Detail Inspector Modal -->
+<div class="modal-overlay" id="event-modal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3>🧾 Security Event Inspector</h3>
+            <button class="close-modal-btn" onclick="closeModal('event-modal')">&times;</button>
+        </div>
+        <div id="event-modal-content">
+            <!-- Injected by JS -->
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- App Script -->
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
